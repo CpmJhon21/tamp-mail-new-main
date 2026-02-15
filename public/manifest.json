@@ -1,11 +1,11 @@
 {
-  "name": "SANN404 Temp Mail",
-  "short_name": "SANN404",
+  "name": "JHON Temp Mail",
+  "short_name": "JHON",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F2F4F8",
   "theme_color": "#F2F4F8",
-  "description": "Secure Temporary Email by SANN404",
+  "description": "Secure Temporary Email by JHON",
   "icons": [
     {
       "src": "https://cdn.odzre.my.id/uvw.jpg",

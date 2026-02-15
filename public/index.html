@@ -11,15 +11,17 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="top-bar">
         <div class="app-name">TempMail</div>
-        
         <div class="user-avatar">
-            <img src="https://cdn.odzre.my.id/cpz.jpg" alt="User">
+            <img src="295a6dc7f4efe03269d55d35a91668d3.jpg" alt="User">
         </div>
     </div>
 
@@ -49,24 +51,24 @@
         <section id="view-inbox" class="tab-view">
             <div class="section-header">
                 <h2>Riwayat Inbox</h2>
+                <button onclick="clearInbox()" class="trash-btn" title="Hapus Semua Pesan">
+                    <i class="bi bi-trash3"></i>
+                </button>
             </div>
-            <div id="readList" class="message-list">
-                </div>
+            <div id="readList" class="message-list"></div>
         </section>
 
         <section id="view-updates" class="tab-view">
             <div class="section-header">
                 <h2>Update Baru <span class="badge" id="badge-count" style="display:none">0</span></h2>
             </div>
-            <div id="unreadList" class="message-list">
-                </div>
+            <div id="unreadList" class="message-list"></div>
         </section>
 
         <section id="view-docs" class="tab-view">
             <div class="section-header">
                 <h2>Dokumentasi</h2>
             </div>
-            
             <div class="doc-card" style="border: 2px dashed #E5E7EB; background: transparent; text-align: center;">
                 <h3 style="justify-content: center; font-size: 1rem;">Dokumentasi Sistem</h3>
                 <p style="margin-bottom: 15px; font-size: 0.85rem;">Baca detail teknis, keamanan, dan arsitektur sistem.</p>
@@ -74,7 +76,6 @@
                     <i class="bi bi-book-half"></i> Buka Dokumentasi Penuh
                 </a>
             </div>
-
             <div class="doc-card">
                 <h3><i class="bi bi-code-slash"></i> Cara Penggunaan</h3>
                 <ul>
@@ -84,12 +85,11 @@
                     <li>Klik pesan untuk membaca. Setelah dibaca, pesan pindah ke <strong>Inbox</strong>.</li>
                 </ul>
             </div>
-
             <div class="doc-card developer-card">
                 <h3>Developer Info</h3>
                 <p class="dev-name">JHON FORUM</p>
                 <p>Aplikasi ini dibuat untuk melindungi privasi user dari spam.</p>
-                <a href="https://whatsapp.com/channel/0029VaLiUSS5q08hPj5mcH0m" target="_blank" class="btn-whatsapp">
+                <a href="https://whatsapp.com/channel/0029Vb6ukqnHQbS4mKP0j80L" target="_blank" class="btn-whatsapp">
                     <i class="bi bi-whatsapp"></i> Join Saluran Developer
                 </a>
             </div>
@@ -102,18 +102,15 @@
             <i class="bi bi-house-door"></i>
             <span>Home</span>
         </div>
-        
         <div class="nav-item" onclick="switchTab('view-inbox', this)">
             <i class="bi bi-archive"></i>
             <span>Inbox</span>
         </div>
-
         <div class="nav-fab-wrapper">
             <div class="nav-fab" onclick="confirmNewEmail()">
                 <i class="bi bi-plus-lg"></i>
             </div>
         </div>
-
         <div class="nav-item" onclick="switchTab('view-updates', this)">
             <div class="icon-wrapper">
                 <i class="bi bi-bell"></i>
@@ -121,7 +118,6 @@
             </div>
             <span>Updates</span>
         </div>
-
         <div class="nav-item" onclick="switchTab('view-docs', this)">
             <i class="bi bi-grid"></i>
             <span>Docs</span>
@@ -132,15 +128,59 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalSubject">Subject</h3>
-                <button onclick="closeModal()" class="close-btn"><i class="bi bi-x-lg"></i></button>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="openMessageShare()" class="share-btn-round"><i class="bi bi-share-fill"></i></button>
+                    <button onclick="closeModal('msgModal')" class="close-btn"><i class="bi bi-x-lg"></i></button>
+                </div>
             </div>
             <div class="modal-meta" id="modalMeta"></div> 
             <div class="modal-body" id="modalBody">...</div>
         </div>
     </div>
 
-    <div id="toast" class="toast">Disalin ke clipboard!</div>
+    <div id="shareMsgModal" class="modal" style="align-items: center; justify-content: center;">
+        <div class="modal-content" style="border-radius: 24px; max-width: 360px; padding: 20px;">
+            <div class="modal-header" style="margin-bottom: 10px;">
+                <h3>Bagikan Pesan</h3>
+                <button onclick="closeModal('shareMsgModal')" class="close-btn"><i class="bi bi-x-lg"></i></button>
+            </div>
+            
+            <p style="font-size: 0.8rem; color: #6B7280; margin-bottom: 20px;">Pesan akan di-generate menjadi gambar.</p>
 
+            <button onclick="shareAsImage()" class="btn-whatsapp" style="width: 100%; justify-content: center; margin-bottom: 10px; background: var(--primary);">
+                <i class="bi bi-image"></i> Share Gambar (IG/WA)
+            </button>
+            <button onclick="shareToWaText()" class="btn-secondary-full">
+                <i class="bi bi-whatsapp"></i> Share Teks WA
+            </button>
+        </div>
+    </div>
+
+    <div id="capture-container" style="position: fixed; left: -9999px; top: 0;">
+        <div id="capture-card" class="capture-card-style">
+            <div class="capture-header">
+                <div class="capture-logo">
+                    <i class="bi bi-shield-lock-fill"></i> TempMail
+                </div>
+            </div>
+            
+            <div class="capture-body">
+                <div class="capture-label">dari:</div>
+                <div class="capture-email" id="capEmail">exmp***@gmail.com</div>
+                
+                <div class="capture-label" style="margin-top: 15px;">pesan:</div>
+                <div class="capture-msg" id="capMsg">
+                    Isi pesan akan muncul disini...
+                </div>
+            </div>
+
+            <div class="capture-footer">
+                Temporary Email | JHON FORUM
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Disalin ke clipboard!</div>
     <script src="script.js"></script>
 </body>
 </html>
