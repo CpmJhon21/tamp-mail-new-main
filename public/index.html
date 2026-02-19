@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#F2F4F8">
+    <meta name="theme-color" content="#F2F4F8" id="themeColor">
     <title>TempMail - Email Sementara</title>
     
     <link rel="manifest" href="manifest.json">
@@ -15,11 +15,44 @@
 </head>
 <body>
 
+    <!-- Progress Bar -->
+    <div id="progressBar" class="progress-bar"></div>
+
+    <!-- Top Bar -->
     <div class="top-bar">
         <div class="app-name">TempMail</div>
         
-        <div class="user-avatar">
-            <img src="https://cdn.odzre.my.id/cpz.jpg" alt="User">
+        <div class="top-bar-actions">
+            <!-- Account Switcher -->
+            <div class="account-switcher" id="accountSwitcher">
+                <select id="accountSelect" onchange="switchAccount(this.value)" class="account-select">
+                    <option value="">Pilih Akun</option>
+                </select>
+                <button onclick="showAddAccountModal()" class="icon-btn" title="Tambah Akun">
+                    <i class="bi bi-plus-circle"></i>
+                </button>
+            </div>
+            
+            <!-- Dark Mode Toggle -->
+            <button onclick="toggleDarkMode()" class="icon-btn" id="darkModeToggle" title="Dark Mode">
+                <i class="bi bi-moon-stars"></i>
+            </button>
+            
+            <!-- User Avatar -->
+            <div class="user-avatar">
+                <img src="https://cdn.odzre.my.id/cpz.jpg" alt="User">
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container" id="searchContainer" style="display: none;">
+        <div class="search-bar">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" placeholder="Cari pesan..." autocomplete="off">
+            <button onclick="clearSearch()" class="clear-search" id="clearSearchBtn" style="display: none;">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
     </div>
 
@@ -50,22 +83,118 @@
                     <span class="dot"></span> <span id="timerText">Auto-refresh: 10s</span>
                 </div>
             </div>
+            
+            <!-- QUICK STATS CARD -->
+            <div class="stats-card">
+                <h3><i class="bi bi-pie-chart"></i> Statistik Inbox</h3>
+                <div class="stats-grid">
+                    <div class="stat-item" onclick="switchTab('view-inbox', document.querySelectorAll('.nav-item')[1])">
+                        <div class="stat-icon" style="background: #EEF2FF; color: #4F46E5;">
+                            <i class="bi bi-envelope"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalMessages">0</span>
+                            <span class="stat-label">Total Pesan</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-item" onclick="switchTab('view-updates', document.querySelectorAll('.nav-item')[2])">
+                        <div class="stat-icon" style="background: #FEF3C7; color: #F59E0B;">
+                            <i class="bi bi-bell"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="unreadMessages">0</span>
+                            <span class="stat-label">Belum Dibaca</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-item" onclick="filterStarred()">
+                        <div class="stat-icon" style="background: #FEE2E2; color: #EF4444;">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="starredMessages">0</span>
+                            <span class="stat-label">Penting</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-item" onclick="showShortcutsHelp()">
+                        <div class="stat-icon" style="background: #E0F2FE; color: #0EA5E9;">
+                            <i class="bi bi-keyboard"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value">?</span>
+                            <span class="stat-label">Shortcuts</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RECENT ACTIVITY -->
+            <div class="recent-activity">
+                <h3><i class="bi bi-clock-history"></i> Aktivitas Terkini</h3>
+                <div id="recentActivityList" class="activity-list">
+                    <div class="activity-item loading">Memuat aktivitas...</div>
+                </div>
+            </div>
         </section>
 
         <!-- INBOX SECTION (READ MESSAGES) -->
         <section id="view-inbox" class="tab-view">
             <div class="section-header">
                 <h2>Riwayat Inbox</h2>
-                <button onclick="clearInbox()" class="trash-btn" id="clearInboxBtn" title="Hapus Semua Pesan">
-                    <i class="bi bi-trash3"></i>
-                </button>
+                <div class="section-actions">
+                    <button onclick="toggleSearch()" class="action-btn" title="Cari">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <button onclick="exportInbox()" class="action-btn" title="Backup">
+                        <i class="bi bi-download"></i>
+                    </button>
+                    <button onclick="clearInbox()" class="trash-btn" id="clearInboxBtn" title="Hapus Semua">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+                </div>
             </div>
-            <div id="readList" class="message-list"></div>
-            <!-- Loading Skeleton untuk Inbox -->
-            <div id="readListSkeleton" class="skeleton-list" style="display: none;">
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar" id="filterBar">
+                <div class="filter-tabs">
+                    <button class="filter-tab active" onclick="setFilter('all')" id="filterAll">
+                        <i class="bi bi-list-ul"></i> Semua
+                    </button>
+                    <button class="filter-tab" onclick="setFilter('unread')" id="filterUnread">
+                        <i class="bi bi-envelope"></i> Belum Dibaca
+                    </button>
+                    <button class="filter-tab" onclick="setFilter('starred')" id="filterStarred">
+                        <i class="bi bi-star"></i> Penting
+                    </button>
+                    <button class="filter-tab" onclick="setFilter('attachments')" id="filterAttachments">
+                        <i class="bi bi-paperclip"></i> Lampiran
+                    </button>
+                </div>
+                
+                <div class="filter-date">
+                    <select id="dateFilterSelect" onchange="setDateFilter(this.value)">
+                        <option value="">Semua Waktu</option>
+                        <option value="today">Hari Ini</option>
+                        <option value="yesterday">Kemarin</option>
+                        <option value="week">7 Hari Terakhir</option>
+                        <option value="month">30 Hari Terakhir</option>
+                        <option value="custom">Kustom</option>
+                    </select>
+                    
+                    <div class="custom-date-range" id="customDateRange" style="display: none;">
+                        <input type="date" id="startDate" onchange="applyCustomDateFilter()">
+                        <span>s/d</span>
+                        <input type="date" id="endDate" onchange="applyCustomDateFilter()">
+                    </div>
+                </div>
+            </div>
+
+            <div id="readList" class="message-list virtual-scroll-container"></div>
+            <div id="readListLoader" class="list-loader" style="display: none;">
+                <div class="loading-spinner small"></div>
+                <span>Memuat...</span>
             </div>
         </section>
 
@@ -73,20 +202,42 @@
         <section id="view-updates" class="tab-view">
             <div class="section-header">
                 <h2>Update Baru <span class="badge" id="badge-count" style="display:none">0</span></h2>
+                <div class="section-actions">
+                    <button onclick="toggleSearch()" class="action-btn" title="Cari">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <button onclick="markAllAsRead()" class="action-btn" title="Tandai semua dibaca">
+                        <i class="bi bi-check-all"></i>
+                    </button>
+                </div>
             </div>
-            <div id="unreadList" class="message-list"></div>
-            <!-- Loading Skeleton untuk Updates -->
-            <div id="unreadListSkeleton" class="skeleton-list" style="display: none;">
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
+
+            <!-- Filter Bar (sama dengan inbox) -->
+            <div class="filter-bar" id="filterBarUpdates">
+                <div class="filter-tabs">
+                    <button class="filter-tab active" onclick="setFilter('all')" id="filterAllUpdates">
+                        <i class="bi bi-list-ul"></i> Semua
+                    </button>
+                    <button class="filter-tab" onclick="setFilter('starred')" id="filterStarredUpdates">
+                        <i class="bi bi-star"></i> Penting
+                    </button>
+                    <button class="filter-tab" onclick="setFilter('attachments')" id="filterAttachmentsUpdates">
+                        <i class="bi bi-paperclip"></i> Lampiran
+                    </button>
+                </div>
             </div>
+
+            <div id="unreadList" class="message-list virtual-scroll-container"></div>
+            <div id="unreadListLoader" class="list-loader" style="display: none;"></div>
         </section>
 
         <!-- DOCS SECTION -->
         <section id="view-docs" class="tab-view">
             <div class="section-header">
                 <h2>Dokumentasi</h2>
+                <button onclick="importInbox()" class="action-btn" title="Restore Backup">
+                    <i class="bi bi-upload"></i>
+                </button>
             </div>
             
             <div class="doc-card" style="border: 2px dashed #E5E7EB; background: transparent; text-align: center;">
@@ -100,11 +251,23 @@
             <div class="doc-card">
                 <h3><i class="bi bi-code-slash"></i> Cara Penggunaan</h3>
                 <ul>
-                    <li>Tekan tombol <strong>+</strong> atau Home untuk generate email.</li>
-                    <li>Salin email dan gunakan untuk daftar akun.</li>
-                    <li>Cek tab <strong>Updates</strong> untuk pesan masuk.</li>
-                    <li>Klik pesan untuk membaca. Setelah dibaca, pesan pindah ke <strong>Inbox</strong>.</li>
-                    <li>Tekan tombol <i class="bi bi-share"></i> di modal pesan untuk membagikan.</li>
+                    <li><strong>Ctrl/Cmd + N</strong> - Buat email baru</li>
+                    <li><strong>Ctrl/Cmd + F</strong> - Cari pesan</li>
+                    <li><strong>Ctrl/Cmd + D</strong> - Dark mode</li>
+                    <li><strong>Ctrl/Cmd + A</strong> - Tandai semua dibaca</li>
+                    <li><strong>Alt + 1-4</strong> - Ganti tab</li>
+                    <li><strong>Esc</strong> - Tutup modal</li>
+                    <li><strong>?</strong> - Bantuan shortcuts</li>
+                </ul>
+            </div>
+
+            <div class="doc-card">
+                <h3><i class="bi bi-database"></i> Data & Privasi</h3>
+                <ul>
+                    <li>Semua data disimpan secara lokal di browser Anda</li>
+                    <li>Backup data bisa diexport kapan saja</li>
+                    <li>Email akan otomatis terhapus setelah 7 hari</li>
+                    <li>Tidak ada data yang dikirim ke server kecuali email</li>
                 </ul>
             </div>
 
@@ -158,6 +321,9 @@
             <div class="modal-header">
                 <h3 id="modalSubject">Subject</h3>
                 <div class="modal-actions">
+                    <button onclick="toggleStarCurrentMessage()" class="modal-btn" id="starCurrentBtn" title="Tandai penting">
+                        <i class="bi bi-star"></i>
+                    </button>
                     <button onclick="openShareModal()" class="modal-btn share-btn" id="shareBtnInModal" title="Bagikan">
                         <i class="bi bi-share"></i>
                     </button>
@@ -166,7 +332,8 @@
                     </button>
                 </div>
             </div>
-            <div class="modal-meta" id="modalMeta"></div> 
+            <div class="modal-meta" id="modalMeta"></div>
+            <div class="modal-attachments" id="modalAttachments" style="display: none;"></div>
             <div class="modal-body" id="modalBody">...</div>
         </div>
     </div>
@@ -217,6 +384,130 @@
         </div>
     </div>
 
+    <!-- MODAL TAMBAH AKUN -->
+    <div id="addAccountModal" class="modal confirm-modal">
+        <div class="modal-content confirm-content">
+            <div class="confirm-icon">
+                <i class="bi bi-envelope-plus"></i>
+            </div>
+            <h3>Tambah Akun Baru</h3>
+            <input type="email" id="newAccountEmail" class="modal-input" placeholder="Masukkan email" autocomplete="off">
+            <div class="confirm-buttons" style="margin-top: 20px;">
+                <button onclick="closeModal('addAccountModal')" class="confirm-btn cancel">Batal</button>
+                <button onclick="addNewAccount()" class="confirm-btn ok">Tambah</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL BACKUP/RESTORE -->
+    <div id="backupModal" class="modal confirm-modal">
+        <div class="modal-content confirm-content">
+            <div class="confirm-icon">
+                <i class="bi bi-database"></i>
+            </div>
+            <h3 id="backupModalTitle">Backup & Restore</h3>
+            <p id="backupModalMessage">Pilih file backup untuk direstore</p>
+            <input type="file" id="backupFile" accept=".json" style="display: none;">
+            <div class="confirm-buttons" style="margin-top: 20px;">
+                <button onclick="closeModal('backupModal')" class="confirm-btn cancel">Batal</button>
+                <button onclick="selectBackupFile()" class="confirm-btn ok">Pilih File</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL MARK ALL READ -->
+    <div id="markAllReadModal" class="modal confirm-modal">
+        <div class="modal-content confirm-content">
+            <div class="confirm-icon">
+                <i class="bi bi-check-all" style="color: var(--success);"></i>
+            </div>
+            <h3>Tandai Semua Dibaca</h3>
+            <p id="markAllReadMessage">Ada <span id="unreadCountForMark">0</span> pesan belum dibaca. Tandai semua sebagai sudah dibaca?</p>
+            <div class="confirm-buttons">
+                <button onclick="closeModal('markAllReadModal')" class="confirm-btn cancel">Batal</button>
+                <button onclick="confirmMarkAllRead()" class="confirm-btn ok" style="background: var(--success);">Ya, Tandai</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SHORTCUTS HELP -->
+    <div id="shortcutsHelpModal" class="modal shortcuts-modal">
+        <div class="modal-content shortcuts-content">
+            <div class="modal-header">
+                <h3><i class="bi bi-keyboard"></i> Keyboard Shortcuts</h3>
+                <button onclick="closeModal('shortcutsHelpModal')" class="modal-btn close-btn">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            
+            <div class="shortcuts-grid">
+                <div class="shortcut-category">
+                    <h4>Navigasi</h4>
+                    <div class="shortcut-item">
+                        <kbd>Alt</kbd> + <kbd>1</kbd> <span>Home</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Alt</kbd> + <kbd>2</kbd> <span>Inbox</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Alt</kbd> + <kbd>3</kbd> <span>Updates</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Alt</kbd> + <kbd>4</kbd> <span>Docs</span>
+                    </div>
+                </div>
+                
+                <div class="shortcut-category">
+                    <h4>Aksi</h4>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl/Cmd</kbd> + <kbd>N</kbd> <span>Email baru</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl/Cmd</kbd> + <kbd>F</kbd> <span>Cari</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl/Cmd</kbd> + <kbd>D</kbd> <span>Dark mode</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl/Cmd</kbd> + <kbd>A</kbd> <span>Tandai semua dibaca</span>
+                    </div>
+                </div>
+                
+                <div class="shortcut-category">
+                    <h4>Lainnya</h4>
+                    <div class="shortcut-item">
+                        <kbd>Esc</kbd> <span>Tutup modal</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>S</kbd> <span>Star/unstar pesan</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>?</kbd> <span>Bantuan ini</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="shortcuts-footer">
+                <button onclick="closeModal('shortcutsHelpModal')" class="btn-primary">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CLEAR INBOX CONFIRMATION -->
+    <div id="clearInboxModal" class="modal confirm-modal">
+        <div class="modal-content confirm-content">
+            <div class="confirm-icon">
+                <i class="bi bi-exclamation-triangle" style="color: var(--danger);"></i>
+            </div>
+            <h3>Hapus Semua Pesan</h3>
+            <p>Semua pesan di inbox akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.</p>
+            <div class="confirm-buttons">
+                <button onclick="closeModal('clearInboxModal')" class="confirm-btn cancel">Batal</button>
+                <button onclick="confirmClearInbox()" class="confirm-btn ok" style="background: var(--danger);">Hapus</button>
+            </div>
+        </div>
+    </div>
+
     <!-- CAPTURE CONTAINER UNTUK GENERATE GAMBAR (HIDDEN) -->
     <div id="capture-container" style="position: fixed; left: -9999px; top: 0;">
         <div id="capture-card" class="capture-card">
@@ -253,25 +544,10 @@
         </div>
     </div>
 
-    <!-- MODAL ERROR/CONFIRMATION CUSTOM -->
-    <div id="confirmModal" class="modal confirm-modal" style="display: none;">
-        <div class="modal-content confirm-content">
-            <div class="confirm-icon">
-                <i class="bi bi-question-circle"></i>
-            </div>
-            <h3 id="confirmTitle">Konfirmasi</h3>
-            <p id="confirmMessage">Apakah Anda yakin?</p>
-            <div class="confirm-buttons">
-                <button onclick="confirmAction(false)" class="confirm-btn cancel">Batal</button>
-                <button onclick="confirmAction(true)" class="confirm-btn ok">Ya</button>
-            </div>
-        </div>
-    </div>
-
     <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="toast">Disalin ke clipboard!</div>
+    <div id="toast" class="toast"></div>
 
-    <!-- Library html2canvas -->
+    <!-- Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="script.js"></script>
 </body>
