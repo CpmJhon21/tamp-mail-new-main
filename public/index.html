@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#F2F4F8" id="themeColor">
+    <meta name="theme-color" content="#F2F4F8">
     <title>TempMail - Email Sementara</title>
     
     <link rel="manifest" href="manifest.json">
@@ -15,50 +15,19 @@
 </head>
 <body>
 
-    <!-- TOP BAR -->
     <div class="top-bar">
         <div class="app-name">TempMail</div>
         
-        <div class="top-bar-actions">
-            <!-- Account Switcher -->
-            <div class="account-switcher" id="accountSwitcher">
-                <select id="accountSelect" onchange="switchAccount(this.value)" class="account-select">
-                    <option value="">Pilih Akun</option>
-                </select>
-                <button onclick="showAddAccountModal()" class="icon-btn" title="Tambah Akun">
-                    <i class="bi bi-plus-circle"></i>
-                </button>
-            </div>
-            
-            <!-- Dark Mode Toggle -->
-            <button onclick="toggleDarkMode()" class="icon-btn" id="darkModeToggle" title="Dark Mode">
-                <i class="bi bi-moon-stars"></i>
-            </button>
-            
-            <!-- User Avatar -->
-            <div class="user-avatar">
-                <img src="https://cdn.odzre.my.id/cpz.jpg" alt="User">
-            </div>
+        <div class="user-avatar">
+            <img src="https://cdn.odzre.my.id/cpz.jpg" alt="User">
         </div>
     </div>
 
-    <!-- SEARCH BAR -->
-    <div class="search-container" id="searchContainer" style="display: none;">
-        <div class="search-bar">
-            <i class="bi bi-search"></i>
-            <input type="text" id="searchInput" placeholder="Cari pesan..." autocomplete="off">
-            <button onclick="clearSearch()" class="clear-search" id="clearSearchBtn" style="display: none;">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- GLOBAL LOADING -->
+    <!-- Loading Indicator Global -->
     <div id="globalLoading" class="global-loading" style="display: none;">
         <div class="loading-spinner"></div>
     </div>
 
-    <!-- MAIN CONTAINER -->
     <main id="main-container">
         
         <!-- HOME SECTION -->
@@ -78,248 +47,46 @@
                     <button onclick="copyEmail()" class="copy-btn" id="copyEmailBtn"><i class="bi bi-copy"></i></button>
                 </div>
                 <div class="status-indicator">
-                    <span class="dot"></span> 
-                    <span id="timerText">Auto-refresh: 10s</span>
-                </div>
-            </div>
-            
-            <!-- Quick Stats -->
-            <div class="quick-stats" id="quickStats">
-                <div class="stat-item">
-                    <span class="stat-label">Total Pesan</span>
-                    <span class="stat-value" id="totalMessages">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Belum Dibaca</span>
-                    <span class="stat-value" id="unreadMessages">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Penting</span>
-                    <span class="stat-value" id="starredMessages">0</span>
+                    <span class="dot"></span> <span id="timerText">Auto-refresh: 10s</span>
                 </div>
             </div>
         </section>
 
-        <!-- INBOX SECTION -->
+        <!-- INBOX SECTION (READ MESSAGES) -->
         <section id="view-inbox" class="tab-view">
             <div class="section-header">
                 <h2>Riwayat Inbox</h2>
-                <div class="section-actions">
-                    <button onclick="toggleSortOrder()" class="action-btn" id="sortBtn" title="Urutkan">
-                        <i class="bi bi-sort-down"></i>
-                    </button>
-                    <button onclick="toggleFilterPanel('inbox')" class="action-btn" id="filterToggleBtn" title="Filter">
-                        <i class="bi bi-funnel"></i>
-                        <span class="filter-badge" id="inboxFilterBadge" style="display: none;">1</span>
-                    </button>
-                    <button onclick="toggleSearch()" class="action-btn" title="Cari">
-                        <i class="bi bi-search"></i>
-                    </button>
-                    <button onclick="exportFilteredResults('inbox')" class="action-btn" title="Export Hasil">
-                        <i class="bi bi-download"></i>
-                    </button>
-                    <button onclick="clearInbox()" class="trash-btn" id="clearInboxBtn" title="Hapus Semua">
-                        <i class="bi bi-trash3"></i>
-                    </button>
-                </div>
+                <button onclick="clearInbox()" class="trash-btn" id="clearInboxBtn" title="Hapus Semua Pesan">
+                    <i class="bi bi-trash3"></i>
+                </button>
             </div>
-
-            <!-- Filter Panel -->
-            <div id="inboxFilterPanel" class="filter-panel" style="display: none;">
-                <div class="filter-header">
-                    <h4>Filter Pesan</h4>
-                    <button onclick="resetFilters('inbox')" class="reset-filter">Reset</button>
-                </div>
-                
-                <!-- Quick Filters -->
-                <div class="quick-filters">
-                    <div class="filter-chip" onclick="filterToday('inbox')">
-                        <i class="bi bi-calendar-day"></i>
-                        <span>Hari ini</span>
-                    </div>
-                    <div class="filter-chip" onclick="filterThisWeek('inbox')">
-                        <i class="bi bi-calendar-week"></i>
-                        <span>Minggu ini</span>
-                    </div>
-                    <div class="filter-chip" onclick="filterThisMonth('inbox')">
-                        <i class="bi bi-calendar-month"></i>
-                        <span>Bulan ini</span>
-                    </div>
-                    <div class="filter-chip" onclick="document.getElementById('inboxStatusFilter').value = 'starred'; applyFilters('inbox')">
-                        <i class="bi bi-star-fill"></i>
-                        <span>Penting</span>
-                    </div>
-                    <div class="filter-chip" onclick="document.getElementById('inboxStatusFilter').value = 'attachments'; applyFilters('inbox')">
-                        <i class="bi bi-paperclip"></i>
-                        <span>Ada lampiran</span>
-                    </div>
-                </div>
-
-                <div class="filter-body">
-                    <div class="filter-group">
-                        <label>Status</label>
-                        <select id="inboxStatusFilter" onchange="applyFilters('inbox')">
-                            <option value="all">Semua</option>
-                            <option value="read">Sudah dibaca</option>
-                            <option value="unread">Belum dibaca</option>
-                            <option value="starred">Penting</option>
-                            <option value="unstarred">Tidak penting</option>
-                            <option value="attachments">Ada lampiran</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label>Rentang Tanggal</label>
-                        <div class="date-range">
-                            <input type="date" id="inboxDateFrom" onchange="applyFilters('inbox')" placeholder="Dari">
-                            <span>s/d</span>
-                            <input type="date" id="inboxDateTo" onchange="applyFilters('inbox')" placeholder="Sampai">
-                        </div>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label>Pengirim</label>
-                        <input type="text" id="inboxSenderFilter" placeholder="Cari pengirim..." oninput="debounceFilter('inbox')">
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label>Kata Kunci</label>
-                        <input type="text" id="inboxKeywordFilter" placeholder="Cari dalam pesan..." oninput="debounceFilter('inbox')">
-                    </div>
-                    
-                    <div class="filter-stats">
-                        <span id="inboxFilterStats">Menampilkan semua pesan</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Chips -->
-            <div class="filter-chips" id="inboxFilterChips"></div>
-
-            <!-- Message List -->
-            <div id="readList" class="message-list virtual-scroll-container"></div>
+            <div id="readList" class="message-list"></div>
+            <!-- Loading Skeleton untuk Inbox -->
             <div id="readListSkeleton" class="skeleton-list" style="display: none;">
                 <div class="skeleton-card"></div>
                 <div class="skeleton-card"></div>
                 <div class="skeleton-card"></div>
             </div>
-            <div id="readListLoader" class="list-loader" style="display: none;">
-                <div class="loading-spinner small"></div>
-                <span>Memuat...</span>
-            </div>
         </section>
 
-        <!-- UPDATES SECTION -->
+        <!-- UPDATES SECTION (UNREAD MESSAGES) -->
         <section id="view-updates" class="tab-view">
             <div class="section-header">
                 <h2>Update Baru <span class="badge" id="badge-count" style="display:none">0</span></h2>
-                <div class="section-actions">
-                    <button onclick="toggleSortOrder()" class="action-btn" id="sortBtnUpdates" title="Urutkan">
-                        <i class="bi bi-sort-down"></i>
-                    </button>
-                    <button onclick="toggleFilterPanel('updates')" class="action-btn" id="updatesFilterToggleBtn" title="Filter">
-                        <i class="bi bi-funnel"></i>
-                        <span class="filter-badge" id="updatesFilterBadge" style="display: none;">1</span>
-                    </button>
-                    <button onclick="toggleSearch()" class="action-btn" title="Cari">
-                        <i class="bi bi-search"></i>
-                    </button>
-                    <button onclick="exportFilteredResults('updates')" class="action-btn" title="Export Hasil">
-                        <i class="bi bi-download"></i>
-                    </button>
-                    <button onclick="markAllAsRead()" class="action-btn mark-read-btn" title="Tandai semua dibaca">
-                        <i class="bi bi-check-all"></i>
-                    </button>
-                </div>
             </div>
-
-            <!-- Filter Panel -->
-            <div id="updatesFilterPanel" class="filter-panel" style="display: none;">
-                <div class="filter-header">
-                    <h4>Filter Update</h4>
-                    <button onclick="resetFilters('updates')" class="reset-filter">Reset</button>
-                </div>
-
-                <!-- Quick Filters -->
-                <div class="quick-filters">
-                    <div class="filter-chip" onclick="filterToday('updates')">
-                        <i class="bi bi-calendar-day"></i>
-                        <span>Hari ini</span>
-                    </div>
-                    <div class="filter-chip" onclick="filterThisWeek('updates')">
-                        <i class="bi bi-calendar-week"></i>
-                        <span>Minggu ini</span>
-                    </div>
-                    <div class="filter-chip" onclick="filterThisMonth('updates')">
-                        <i class="bi bi-calendar-month"></i>
-                        <span>Bulan ini</span>
-                    </div>
-                    <div class="filter-chip" onclick="document.getElementById('updatesStatusFilter').value = 'starred'; applyFilters('updates')">
-                        <i class="bi bi-star-fill"></i>
-                        <span>Penting</span>
-                    </div>
-                    <div class="filter-chip" onclick="document.getElementById('updatesStatusFilter').value = 'attachments'; applyFilters('updates')">
-                        <i class="bi bi-paperclip"></i>
-                        <span>Ada lampiran</span>
-                    </div>
-                </div>
-                
-                <div class="filter-body">
-                    <div class="filter-group">
-                        <label>Status</label>
-                        <select id="updatesStatusFilter" onchange="applyFilters('updates')">
-                            <option value="all">Semua</option>
-                            <option value="starred">Penting</option>
-                            <option value="unstarred">Tidak penting</option>
-                            <option value="attachments">Ada lampiran</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label>Rentang Tanggal</label>
-                        <div class="date-range">
-                            <input type="date" id="updatesDateFrom" onchange="applyFilters('updates')" placeholder="Dari">
-                            <span>s/d</span>
-                            <input type="date" id="updatesDateTo" onchange="applyFilters('updates')" placeholder="Sampai">
-                        </div>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label>Pengirim</label>
-                        <input type="text" id="updatesSenderFilter" placeholder="Cari pengirim..." oninput="debounceFilter('updates')">
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label>Kata Kunci</label>
-                        <input type="text" id="updatesKeywordFilter" placeholder="Cari dalam pesan..." oninput="debounceFilter('updates')">
-                    </div>
-                    
-                    <div class="filter-stats">
-                        <span id="updatesFilterStats">Menampilkan semua pesan</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Chips -->
-            <div class="filter-chips" id="updatesFilterChips"></div>
-
-            <!-- Message List -->
-            <div id="unreadList" class="message-list virtual-scroll-container"></div>
+            <div id="unreadList" class="message-list"></div>
+            <!-- Loading Skeleton untuk Updates -->
             <div id="unreadListSkeleton" class="skeleton-list" style="display: none;">
                 <div class="skeleton-card"></div>
                 <div class="skeleton-card"></div>
                 <div class="skeleton-card"></div>
             </div>
-            <div id="unreadListLoader" class="list-loader" style="display: none;"></div>
         </section>
 
         <!-- DOCS SECTION -->
         <section id="view-docs" class="tab-view">
             <div class="section-header">
                 <h2>Dokumentasi</h2>
-                <button onclick="importInbox()" class="action-btn" title="Restore Backup">
-                    <i class="bi bi-upload"></i>
-                </button>
             </div>
             
             <div class="doc-card" style="border: 2px dashed #E5E7EB; background: transparent; text-align: center;">
@@ -333,23 +100,11 @@
             <div class="doc-card">
                 <h3><i class="bi bi-code-slash"></i> Cara Penggunaan</h3>
                 <ul>
-                    <li><strong>Ctrl/Cmd + N</strong> - Buat email baru</li>
-                    <li><strong>Ctrl/Cmd + F</strong> - Cari pesan</li>
-                    <li><strong>Ctrl/Cmd + D</strong> - Toggle dark mode</li>
-                    <li><strong>Alt + 1-4</strong> - Ganti tab</li>
-                    <li><strong>Esc</strong> - Tutup modal</li>
-                    <li><strong>?</strong> - Tampilkan bantuan shortcut</li>
-                </ul>
-            </div>
-
-            <div class="doc-card">
-                <h3><i class="bi bi-funnel"></i> Fitur Filter</h3>
-                <ul>
-                    <li>Filter berdasarkan status (dibaca/penting/lampiran)</li>
-                    <li>Filter rentang tanggal (dari - sampai)</li>
-                    <li>Filter pengirim dan kata kunci</li>
-                    <li>Quick filter: Hari ini, Minggu ini, Bulan ini</li>
-                    <li>Export hasil filter ke file JSON</li>
+                    <li>Tekan tombol <strong>+</strong> atau Home untuk generate email.</li>
+                    <li>Salin email dan gunakan untuk daftar akun.</li>
+                    <li>Cek tab <strong>Updates</strong> untuk pesan masuk.</li>
+                    <li>Klik pesan untuk membaca. Setelah dibaca, pesan pindah ke <strong>Inbox</strong>.</li>
+                    <li>Tekan tombol <i class="bi bi-share"></i> di modal pesan untuk membagikan.</li>
                 </ul>
             </div>
 
@@ -362,6 +117,7 @@
                 </a>
             </div>
         </section>
+
     </main>
 
     <!-- BOTTOM NAVIGATION -->
@@ -402,9 +158,6 @@
             <div class="modal-header">
                 <h3 id="modalSubject">Subject</h3>
                 <div class="modal-actions">
-                    <button onclick="toggleStarCurrentMessage()" class="modal-btn" id="starCurrentBtn" title="Tandai penting">
-                        <i class="bi bi-star"></i>
-                    </button>
                     <button onclick="openShareModal()" class="modal-btn share-btn" id="shareBtnInModal" title="Bagikan">
                         <i class="bi bi-share"></i>
                     </button>
@@ -413,8 +166,7 @@
                     </button>
                 </div>
             </div>
-            <div class="modal-meta" id="modalMeta"></div>
-            <div class="modal-attachments" id="modalAttachments" style="display: none;"></div>
+            <div class="modal-meta" id="modalMeta"></div> 
             <div class="modal-body" id="modalBody">...</div>
         </div>
     </div>
@@ -429,7 +181,9 @@
                 </button>
             </div>
             
-            <p class="share-description">Pilih cara membagikan pesan ini</p>
+            <p class="share-description">
+                Pilih cara membagikan pesan ini
+            </p>
 
             <div class="share-options">
                 <button onclick="shareAsImage()" class="share-option" id="shareImageBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
@@ -457,94 +211,13 @@
                 </button>
             </div>
 
-            <button onclick="closeModal('shareMsgModal')" class="cancel-btn">Batal</button>
+            <button onclick="closeModal('shareMsgModal')" class="cancel-btn">
+                Batal
+            </button>
         </div>
     </div>
 
-    <!-- MODAL TAMBAH AKUN -->
-    <div id="addAccountModal" class="modal confirm-modal">
-        <div class="modal-content confirm-content">
-            <div class="confirm-icon">
-                <i class="bi bi-envelope-plus"></i>
-            </div>
-            <h3>Tambah Akun Baru</h3>
-            <input type="email" id="newAccountEmail" class="modal-input" placeholder="Masukkan email" autocomplete="off">
-            <div class="confirm-buttons" style="margin-top: 20px;">
-                <button onclick="closeModal('addAccountModal')" class="confirm-btn cancel">Batal</button>
-                <button onclick="addNewAccount()" class="confirm-btn ok">Tambah</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL BACKUP/RESTORE -->
-    <div id="backupModal" class="modal confirm-modal">
-        <div class="modal-content confirm-content">
-            <div class="confirm-icon">
-                <i class="bi bi-database"></i>
-            </div>
-            <h3 id="backupModalTitle">Restore Backup</h3>
-            <p id="backupModalMessage">Pilih file backup untuk direstore</p>
-            <input type="file" id="backupFile" accept=".json" style="display: none;">
-            <div class="confirm-buttons" style="margin-top: 20px;">
-                <button onclick="closeModal('backupModal')" class="confirm-btn cancel">Batal</button>
-                <button onclick="selectBackupFile()" class="confirm-btn ok">Pilih File</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL KONFIRMASI -->
-    <div id="confirmModal" class="modal confirm-modal" style="display: none;">
-        <div class="modal-content confirm-content">
-            <div class="confirm-icon">
-                <i class="bi bi-question-circle"></i>
-            </div>
-            <h3 id="confirmTitle">Konfirmasi</h3>
-            <p id="confirmMessage">Apakah Anda yakin?</p>
-            <div class="confirm-buttons">
-                <button onclick="confirmAction(false)" class="confirm-btn cancel">Batal</button>
-                <button onclick="confirmAction(true)" class="confirm-btn ok">Ya</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- SHORTCUTS HELP MODAL -->
-    <div id="shortcutsModal" class="modal confirm-modal" style="display: none;">
-        <div class="modal-content confirm-content" style="max-width: 400px;">
-            <div class="confirm-icon">
-                <i class="bi bi-keyboard"></i>
-            </div>
-            <h3>Keyboard Shortcuts</h3>
-            <div class="shortcuts-list">
-                <div class="shortcut-item">
-                    <kbd>Ctrl/Cmd + N</kbd>
-                    <span>Buat email baru</span>
-                </div>
-                <div class="shortcut-item">
-                    <kbd>Ctrl/Cmd + F</kbd>
-                    <span>Cari pesan</span>
-                </div>
-                <div class="shortcut-item">
-                    <kbd>Ctrl/Cmd + D</kbd>
-                    <span>Toggle dark mode</span>
-                </div>
-                <div class="shortcut-item">
-                    <kbd>Alt + 1-4</kbd>
-                    <span>Ganti tab</span>
-                </div>
-                <div class="shortcut-item">
-                    <kbd>Esc</kbd>
-                    <span>Tutup modal</span>
-                </div>
-                <div class="shortcut-item">
-                    <kbd>?</kbd>
-                    <span>Tampilkan bantuan</span>
-                </div>
-            </div>
-            <button onclick="closeModal('shortcutsModal')" class="cancel-btn" style="margin-top: 20px;">Tutup</button>
-        </div>
-    </div>
-
-    <!-- CAPTURE CONTAINER UNTUK GENERATE GAMBAR -->
+    <!-- CAPTURE CONTAINER UNTUK GENERATE GAMBAR (HIDDEN) -->
     <div id="capture-container" style="position: fixed; left: -9999px; top: 0;">
         <div id="capture-card" class="capture-card">
             <div class="capture-header">
@@ -580,10 +253,25 @@
         </div>
     </div>
 
-    <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="toast"></div>
+    <!-- MODAL ERROR/CONFIRMATION CUSTOM -->
+    <div id="confirmModal" class="modal confirm-modal" style="display: none;">
+        <div class="modal-content confirm-content">
+            <div class="confirm-icon">
+                <i class="bi bi-question-circle"></i>
+            </div>
+            <h3 id="confirmTitle">Konfirmasi</h3>
+            <p id="confirmMessage">Apakah Anda yakin?</p>
+            <div class="confirm-buttons">
+                <button onclick="confirmAction(false)" class="confirm-btn cancel">Batal</button>
+                <button onclick="confirmAction(true)" class="confirm-btn ok">Ya</button>
+            </div>
+        </div>
+    </div>
 
-    <!-- LIBRARIES -->
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="toast">Disalin ke clipboard!</div>
+
+    <!-- Library html2canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="script.js"></script>
 </body>

@@ -1,6 +1,7 @@
-const CACHE_NAME = 'tempmail-v2';
-const API_CACHE_NAME = 'tempmail-api-v2';
+const CACHE_NAME = 'tempmail-v1';
+const API_CACHE_NAME = 'tempmail-api-v1';
 
+// Assets to cache
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -12,6 +13,7 @@ const STATIC_ASSETS = [
     'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
 ];
 
+// Install event
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
@@ -21,6 +23,7 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
+// Activate event
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
@@ -36,6 +39,7 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
+// Fetch event with cache strategy
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
     
@@ -57,7 +61,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
     
-    // Static assets - Cache first
+    // Static assets - Cache first, then network
     event.respondWith(
         caches.match(event.request)
             .then((response) => {
@@ -65,6 +69,7 @@ self.addEventListener('fetch', (event) => {
                     return response;
                 }
                 return fetch(event.request).then((response) => {
+                    // Cache valid responses
                     if (response && response.status === 200) {
                         const responseClone = response.clone();
                         caches.open(CACHE_NAME).then((cache) => {
