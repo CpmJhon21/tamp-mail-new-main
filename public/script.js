@@ -436,7 +436,7 @@ function shareToWaText() {
     const modalFrom = document.querySelector('.meta-from')?.innerText || 'Unknown';
     const modalTime = document.querySelector('.meta-time')?.innerText || '';
     
-    const text = `*${modalSubject}*\n\n📧 *Dari:* ${modalFrom}\n⏰ *Waktu:* ${modalTime}\n\n📝 *Pesan:*\n${modalBody}\n\n━━━━━━━━━━━━━━\n_Dikirim via TempMail - JHON FORUM_`;
+    const text = `📝 *subjeck:* ${modalSubject}\n\n📧 *Dari:* ${modalFrom}\n⏰ *Waktu:* ${modalTime}\n\n📝 *Pesan:*\n${modalBody}\n\n━━━━━━━━━━━━━━\n_Dikirim via TempMail - JHON FORUM_`;
     
     const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(waUrl, '_blank');
@@ -451,7 +451,7 @@ function copyMessageText() {
     const modalFrom = document.querySelector('.meta-from')?.innerText || 'Unknown';
     const modalTime = document.querySelector('.meta-time')?.innerText || '';
     
-    const text = `*${modalSubject}*\nDari: ${modalFrom}\nWaktu: ${modalTime}\n\n${modalBody}`;
+    const text = `📝 *Subjeck:* ${modalSubject}\n\n📧 *Dari:* ${modalFrom}\n⏰ *Waktu:* ${modalTime}\n\n📝 *Pesan:*\n${modalBody}\n\n━━━━━━━━━━━━━━\n_Dikirim via TempMail - JHON FORUM_`;
     
     navigator.clipboard.writeText(text).then(() => {
         showToast('Teks disalin!');
