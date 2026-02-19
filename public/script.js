@@ -186,7 +186,7 @@ async function fetchInbox() {
     }
 }
 
-// Render semua pesan
+// Render semua pesan - DENGAN PERBAIKAN UNTUK EMAIL PANJANG
 function renderMessages(messages) {
     const unreadContainer = document.getElementById('unreadList');
     const readContainer = document.getElementById('readList');
@@ -200,16 +200,23 @@ function renderMessages(messages) {
     messages.forEach((msg) => {
         const initial = msg.from ? msg.from.charAt(0).toUpperCase() : '?';
         const timeDisplay = msg.created.split(' ')[1] || msg.created;
+        
+        // Deteksi apakah email panjang (>20 karakter)
+        const isEmailLong = msg.from && msg.from.length > 20;
+        const emailClass = isEmailLong ? 'email-long' : '';
+        
+        // Potong email untuk ditampilkan di tooltip
+        const emailTitle = msg.from || 'Unknown';
 
         const html = `
             <div class="message-card ${msg.isRead ? 'read' : 'unread'}" onclick="openMessage('${msg.id}')">
                 <div class="msg-avatar">${initial}</div>
                 <div class="msg-content">
                     <div class="msg-header">
-                        <span class="msg-from">${msg.from}</span>
+                        <span class="msg-from ${emailClass}" title="${emailTitle}">${msg.from || 'Unknown'}</span>
                         <span class="msg-time">${timeDisplay}</span>
                     </div>
-                    <div class="msg-subject">${msg.subject || '(Tanpa Subjek)'}</div>
+                    <div class="msg-subject" title="${msg.subject || 'Tanpa Subjek'}">${msg.subject || '(Tanpa Subjek)'}</div>
                     <div class="msg-snippet">${msg.message.substring(0, 60)}${msg.message.length > 60 ? '...' : ''}</div>
                 </div>
             </div>
@@ -229,7 +236,7 @@ function renderMessages(messages) {
     updateBadge(unreadCount);
 }
 
-// Buka pesan
+// Buka pesan - DENGAN PERBAIKAN UNTUK EMAIL PANJANG
 async function openMessage(msgId) {
     const messages = await getAllMessagesFromDB();
     const msg = messages.find(m => m.id === msgId);
@@ -241,11 +248,15 @@ async function openMessage(msgId) {
     document.getElementById('modalSubject').innerText = msg.subject || '(Tanpa Subjek)';
     document.getElementById('modalBody').innerText = msg.message;
     
+    // Deteksi email panjang untuk modal (>25 karakter)
+    const isEmailLong = msg.from && msg.from.length > 25;
+    const emailClass = isEmailLong ? 'email-long' : '';
+    
     document.getElementById('modalMeta').innerHTML = `
         <div class="meta-avatar">${initial}</div>
         <div class="meta-info">
-            <span class="meta-from">${msg.from}</span>
-            <span class="meta-time">${msg.created}</span>
+            <div class="meta-from ${emailClass}" title="${msg.from || 'Unknown'}">${msg.from || 'Unknown'}</div>
+            <div class="meta-time">${msg.created}</div>
         </div>
     `;
     
@@ -380,7 +391,6 @@ async function shareAsImage() {
     showToast('Membuat gambar...');
     
     try {
-        // Clone card untuk menghindari gangguan
         const canvas = await html2canvas(captureCard, {
             scale: 2,
             backgroundColor: '#ffffff',
@@ -436,7 +446,7 @@ function shareToWaText() {
     const modalFrom = document.querySelector('.meta-from')?.innerText || 'Unknown';
     const modalTime = document.querySelector('.meta-time')?.innerText || '';
     
-    const text = `📝 *subjeck:* ${modalSubject}\n\n📧 *Dari:* ${modalFrom}\n⏰ *Waktu:* ${modalTime}\n\n📝 *Pesan:*\n${modalBody}\n\n━━━━━━━━━━━━━━\n_Dikirim via TempMail - JHON FORUM_`;
+    const text = `📝 *Subjeck:* ${modalSubject}\n\n📧 *Dari:* ${modalFrom}\n⏰ *Waktu:* ${modalTime}\n\n📝 *Pesan:*\n${modalBody}\n\n━━━━━━━━━━━━━━\n_Dikirim via TempMail - JHON FORUM_`;
     
     const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(waUrl, '_blank');
@@ -454,6 +464,7 @@ function copyMessageText() {
     const text = `📝 *Subjeck:* ${modalSubject}\n\n📧 *Dari:* ${modalFrom}\n⏰ *Waktu:* ${modalTime}\n\n📝 *Pesan:*\n${modalBody}\n\n━━━━━━━━━━━━━━\n_Dikirim via TempMail - JHON FORUM_`;
     
     navigator.clipboard.writeText(text).then(() => {
+        showToast('Teks disalin!');
         showToast('Teks disalin!');
         closeModal('shareMsgModal');
     }).catch(() => {

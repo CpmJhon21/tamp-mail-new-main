@@ -242,7 +242,7 @@ body.modal-open {
     transform: scale(0.95);
 }
 
-/* Message List */
+/* ===== MESSAGE LIST - PERBAIKAN OVERFLOW TEXT ===== */
 .message-list { 
     display: flex; 
     flex-direction: column; 
@@ -256,11 +256,12 @@ body.modal-open {
     box-shadow: var(--shadow-card);
     cursor: pointer;
     display: flex;
-    gap: 16px;
+    gap: 12px;
     align-items: flex-start;
     transition: transform 0.1s;
     position: relative;
     overflow: hidden;
+    width: 100%;
 }
 
 .message-card:active { 
@@ -280,67 +281,81 @@ body.modal-open {
 }
 
 .msg-avatar {
-    width: 48px; 
-    height: 48px;
+    width: 45px; 
+    height: 45px;
     background: #EEF2FF; 
     color: #4F46E5;
-    border-radius: 16px;
+    border-radius: 14px;
     display: flex; 
     align-items: center; 
     justify-content: center;
     font-weight: 700; 
-    font-size: 1.3rem; 
+    font-size: 1.2rem; 
     flex-shrink: 0;
 }
 
 .msg-content { 
     flex: 1; 
-    min-width: 0; 
+    min-width: 0;
+    width: calc(100% - 57px);
 }
 
 .msg-header { 
     display: flex; 
     justify-content: space-between; 
-    align-items: baseline; 
-    margin-bottom: 2px; 
+    align-items: center; 
+    margin-bottom: 4px; 
+    width: 100%;
 }
 
 .msg-from { 
     font-weight: 700; 
-    font-size: 0.95rem; 
+    font-size: 0.9rem; 
     color: var(--primary); 
     white-space: nowrap; 
     overflow: hidden; 
     text-overflow: ellipsis; 
-    max-width: 65%; 
+    max-width: 65%;
+    display: block;
+}
+
+.msg-from.email-long {
+    max-width: 60%;
+    font-size: 0.85rem;
 }
 
 .msg-time { 
     font-size: 0.7rem; 
     color: var(--text-muted); 
     font-weight: 500; 
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 6px;
 }
 
 .msg-subject { 
     font-weight: 600; 
-    font-size: 0.9rem; 
+    font-size: 0.85rem; 
     color: #374151; 
     margin-bottom: 4px; 
     white-space: nowrap; 
     overflow: hidden; 
     text-overflow: ellipsis; 
+    width: 100%;
 }
 
 .msg-snippet { 
-    font-size: 0.85rem; 
+    font-size: 0.8rem; 
     color: var(--text-muted); 
-    line-height: 1.3; 
+    line-height: 1.4; 
     display: -webkit-box; 
     -webkit-line-clamp: 2; 
     -webkit-box-orient: vertical; 
     overflow: hidden; 
+    word-break: break-word;
 }
 
+/* Read State */
 .message-card.read .msg-from { 
     font-weight: 500; 
     color: #6B7280; 
@@ -501,7 +516,7 @@ body.modal-open {
     border: 2px solid white; 
 }
 
-/* Modal Styles - PERBAIKAN UTAMA */
+/* ===== MODAL STYLES ===== */
 .modal {
     display: none;
     position: fixed;
@@ -571,11 +586,14 @@ body.modal-open {
     font-size: 1.2rem;
     font-weight: 600;
     color: var(--primary);
+    word-break: break-word;
+    padding-right: 10px;
 }
 
 .modal-actions {
     display: flex;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .modal-btn {
@@ -610,15 +628,16 @@ body.modal-open {
     background: #E5E7EB;
 }
 
-/* Modal Meta */
+/* Modal Meta - PERBAIKAN UNTUK EMAIL PANJANG */
 .modal-meta {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
     margin-bottom: 24px;
     padding: 16px;
     background: #F9FAFB;
     border-radius: 20px;
+    width: 100%;
 }
 
 .meta-avatar {
@@ -638,13 +657,21 @@ body.modal-open {
 .meta-info {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
+    min-width: 0;
+    flex: 1;
 }
 
 .meta-from {
     font-weight: 600;
     font-size: 1rem;
     color: var(--primary);
+    word-break: break-all;
+    word-wrap: break-word;
+    line-height: 1.5;
+    background: #F3F4F6;
+    padding: 8px 12px;
+    border-radius: 12px;
 }
 
 .meta-time {
@@ -659,10 +686,13 @@ body.modal-open {
     color: #374151;
     white-space: pre-wrap;
     word-wrap: break-word;
-    padding: 16px;
+    word-break: break-word;
+    padding: 18px;
     background: #F9FAFB;
     border-radius: 20px;
     min-height: 120px;
+    max-height: 50vh;
+    overflow-y: auto;
 }
 
 /* Share Options */
@@ -801,6 +831,7 @@ body.modal-open {
     padding: 12px;
     border-radius: 14px;
     word-break: break-all;
+    word-wrap: break-word;
     line-height: 1.5;
 }
 
@@ -816,6 +847,7 @@ body.modal-open {
     max-height: 200px;
     overflow-y: auto;
     white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .capture-footer {
@@ -855,6 +887,18 @@ body.modal-open {
     transform: translateX(-50%) translateY(0); 
 }
 
+/* Utility Classes */
+.text-ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.word-break-all {
+    word-break: break-all;
+    word-wrap: break-word;
+}
+
 /* Animations */
 @keyframes pulse { 
     0% { opacity: 1; } 
@@ -874,5 +918,24 @@ body.modal-open {
     
     .share-option i {
         font-size: 1.5rem;
+    }
+    
+    .msg-from {
+        max-width: 60%;
+    }
+    
+    .msg-from.email-long {
+        max-width: 55%;
+    }
+}
+
+@media (max-width: 320px) {
+    .msg-from {
+        max-width: 55%;
+    }
+    
+    .msg-from.email-long {
+        max-width: 50%;
+        font-size: 0.8rem;
     }
 }
