@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#F2F4F8">
-    <title>TempMail</title>
+    <title>TempMail - Email Sementara</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/732/732200.png">
@@ -25,6 +25,7 @@
 
     <main id="main-container">
         
+        <!-- HOME SECTION -->
         <section id="view-home" class="tab-view active">
             <div class="hero-card">
                 <div class="icon-glow">
@@ -46,7 +47,8 @@
             </div>
         </section>
 
-                <section id="view-inbox" class="tab-view">
+        <!-- INBOX SECTION (READ MESSAGES) -->
+        <section id="view-inbox" class="tab-view">
             <div class="section-header">
                 <h2>Riwayat Inbox</h2>
                 <button onclick="clearInbox()" class="trash-btn" title="Hapus Semua Pesan">
@@ -56,14 +58,15 @@
             <div id="readList" class="message-list"></div>
         </section>
 
+        <!-- UPDATES SECTION (UNREAD MESSAGES) -->
         <section id="view-updates" class="tab-view">
             <div class="section-header">
                 <h2>Update Baru <span class="badge" id="badge-count" style="display:none">0</span></h2>
             </div>
-            <div id="unreadList" class="message-list">
-                </div>
+            <div id="unreadList" class="message-list"></div>
         </section>
 
+        <!-- DOCS SECTION -->
         <section id="view-docs" class="tab-view">
             <div class="section-header">
                 <h2>Dokumentasi</h2>
@@ -84,6 +87,7 @@
                     <li>Salin email dan gunakan untuk daftar akun.</li>
                     <li>Cek tab <strong>Updates</strong> untuk pesan masuk.</li>
                     <li>Klik pesan untuk membaca. Setelah dibaca, pesan pindah ke <strong>Inbox</strong>.</li>
+                    <li>Tekan tombol <i class="bi bi-share"></i> di modal pesan untuk membagikan.</li>
                 </ul>
             </div>
 
@@ -99,6 +103,7 @@
 
     </main>
 
+    <!-- BOTTOM NAVIGATION -->
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="switchTab('view-home', this)">
             <i class="bi bi-house-door"></i>
@@ -130,61 +135,112 @@
         </div>
     </nav>
 
+    <!-- MODAL DETAIL PESAN -->
     <div id="msgModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalSubject">Subject</h3>
-                <button onclick="closeModal()" class="close-btn"><i class="bi bi-x-lg"></i></button>
+                <div class="modal-actions">
+                    <button onclick="openShareModal()" class="modal-btn share-btn" id="shareBtnInModal" title="Bagikan">
+                        <i class="bi bi-share"></i>
+                    </button>
+                    <button onclick="closeModal('msgModal')" class="modal-btn close-btn" title="Tutup">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
             </div>
             <div class="modal-meta" id="modalMeta"></div> 
             <div class="modal-body" id="modalBody">...</div>
         </div>
     </div>
-    
-        <div id="shareMsgModal" class="modal" style="align-items: center; justify-content: center;">
-        <div class="modal-content" style="border-radius: 24px; max-width: 360px; padding: 20px;">
-            <div class="modal-header" style="margin-bottom: 10px;">
+
+    <!-- MODAL SHARE PESAN -->
+    <div id="shareMsgModal" class="modal share-modal">
+        <div class="modal-content share-content">
+            <div class="modal-header">
                 <h3>Bagikan Pesan</h3>
-                <button onclick="closeModal('shareMsgModal')" class="close-btn"><i class="bi bi-x-lg"></i></button>
+                <button onclick="closeModal('shareMsgModal')" class="modal-btn close-btn" title="Tutup">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
             
-            <p style="font-size: 0.8rem; color: #6B7280; margin-bottom: 20px;">Pesan akan di-generate menjadi gambar.</p>
+            <p class="share-description">
+                Pilih cara membagikan pesan ini
+            </p>
 
-            <button onclick="shareAsImage()" class="btn-whatsapp" style="width: 100%; justify-content: center; margin-bottom: 10px; background: var(--primary);">
-                <i class="bi bi-image"></i> Share Gambar (IG/WA)
-            </button>
-            <button onclick="shareToWaText()" class="btn-secondary-full">
-                <i class="bi bi-whatsapp"></i> Share Teks WA
+            <div class="share-options">
+                <button onclick="shareAsImage()" class="share-option" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <i class="bi bi-image"></i>
+                    <div class="share-option-text">
+                        <strong>Share Gambar</strong>
+                        <span>Instagram, Facebook, dll</span>
+                    </div>
+                </button>
+                
+                <button onclick="shareToWaText()" class="share-option" style="background: #25D366;">
+                    <i class="bi bi-whatsapp"></i>
+                    <div class="share-option-text">
+                        <strong>Share Teks WA</strong>
+                        <span>Kirim ke WhatsApp</span>
+                    </div>
+                </button>
+
+                <button onclick="copyMessageText()" class="share-option" style="background: var(--primary);">
+                    <i class="bi bi-clipboard"></i>
+                    <div class="share-option-text">
+                        <strong>Copy Teks</strong>
+                        <span>Salin ke clipboard</span>
+                    </div>
+                </button>
+            </div>
+
+            <button onclick="closeModal('shareMsgModal')" class="cancel-btn">
+                Batal
             </button>
         </div>
     </div>
 
+    <!-- CAPTURE CONTAINER UNTUK GENERATE GAMBAR (HIDDEN) -->
     <div id="capture-container" style="position: fixed; left: -9999px; top: 0;">
-        <div id="capture-card" class="capture-card-style">
+        <div id="capture-card" class="capture-card">
             <div class="capture-header">
                 <div class="capture-logo">
                     <i class="bi bi-shield-lock-fill"></i> TempMail
                 </div>
+                <div class="capture-badge">Pesan Sementara</div>
             </div>
             
             <div class="capture-body">
-                <div class="capture-label">dari:</div>
-                <div class="capture-email" id="capEmail">exmp***@gmail.com</div>
+                <div class="capture-field">
+                    <div class="capture-label">DARI:</div>
+                    <div class="capture-value" id="capEmail">example@mail.com</div>
+                </div>
                 
-                <div class="capture-label" style="margin-top: 15px;">pesan:</div>
-                <div class="capture-msg" id="capMsg">
-                    Isi pesan akan muncul disini...
+                <div class="capture-field">
+                    <div class="capture-label">SUBJEK:</div>
+                    <div class="capture-value capture-subject" id="capSubject">Subjek Pesan</div>
+                </div>
+                
+                <div class="capture-field">
+                    <div class="capture-label">PESAN:</div>
+                    <div class="capture-value capture-message" id="capMsg">
+                        Isi pesan akan muncul disini...
+                    </div>
                 </div>
             </div>
 
             <div class="capture-footer">
-                Temporary Email | JHON FORUM
+                <div>Temporary Email | JHON FORUM</div>
+                <div class="capture-time">© 2024 TempMail - Privasi Terjaga</div>
             </div>
         </div>
     </div>
 
+    <!-- TOAST NOTIFICATION -->
     <div id="toast" class="toast">Disalin ke clipboard!</div>
 
+    <!-- Library html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

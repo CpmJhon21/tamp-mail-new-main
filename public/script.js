@@ -1,5 +1,6 @@
 let currentEmail = localStorage.getItem('jhon_mail') || null;
 let db; 
+let autoRefreshInterval;
 
 const DB_NAME = 'jhonMailDB';
 const DB_VERSION = 1;
@@ -23,7 +24,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     startAutoRefresh();
+    
+    // Event listener untuk klik di luar modal
+    setupModalClickHandlers();
 });
+
+// Setup modal click handlers
+function setupModalClickHandlers() {
+    const msgModal = document.getElementById('msgModal');
+    const shareModal = document.getElementById('shareMsgModal');
+    
+    msgModal.addEventListener('click', function(event) {
+        if (event.target === msgModal) {
+            closeModal('msgModal');
+        }
+    });
+    
+    shareModal.addEventListener('click', function(event) {
+        if (event.target === shareModal) {
+            closeModal('shareMsgModal');
+        }
+    });
+}
 
 // Inisialisasi IndexedDB
 function initDB() {
@@ -35,18 +57,22 @@ function initDB() {
                 db.createObjectStore(STORE_NAME, { keyPath: 'id' });
             }
         };
-        request.onsuccess = (e) => { db = e.target.result; resolve(db); };
+        request.onsuccess = (e) => { 
+            db = e.target.result; 
+            resolve(db); 
+        };
         request.onerror = (e) => reject(e);
     });
 }
 
 // Simpan pesan ke DB
 function saveMessageToDB(msg) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
-        store.put(msg); 
-        tx.oncomplete = () => resolve();
+        const request = store.put(msg);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject();
     });
 }
 
@@ -109,11 +135,14 @@ async function generateNewEmail() {
             document.getElementById('readList').innerHTML = emptyState('inbox');
             
             switchTab('view-home', document.querySelector('.nav-item:first-child'));
+            
+            showToast('Email baru berhasil dibuat');
         } else {
             alert('Gagal: ' + data.result);
         }
     } catch (e) {
         emailDisplay.innerText = "Error Jaringan";
+        showToast('Gagal terhubung ke server');
     }
 }
 
@@ -134,6 +163,7 @@ async function fetchInbox() {
         if (data.success && data.result.inbox) {
             const serverMessages = data.result.inbox;
             const existingMessages = await getAllMessagesFromDB();
+            let newMessagesCount = 0;
             
             for (const msg of serverMessages) {
                 const msgId = `${msg.created}_${msg.from}`.replace(/\s/g, '');
@@ -141,8 +171,14 @@ async function fetchInbox() {
                 
                 if (!exists) {
                     await saveMessageToDB({ ...msg, id: msgId, isRead: false });
+                    newMessagesCount++;
                 }
             }
+            
+            if (newMessagesCount > 0) {
+                showToast(`${newMessagesCount} pesan baru diterima`);
+            }
+            
             await loadCachedMessages();
         }
     } catch (e) {
@@ -174,7 +210,7 @@ function renderMessages(messages) {
                         <span class="msg-time">${timeDisplay}</span>
                     </div>
                     <div class="msg-subject">${msg.subject || '(Tanpa Subjek)'}</div>
-                    <div class="msg-snippet">${msg.message}</div>
+                    <div class="msg-snippet">${msg.message.substring(0, 60)}${msg.message.length > 60 ? '...' : ''}</div>
                 </div>
             </div>
         `;
@@ -202,7 +238,7 @@ async function openMessage(msgId) {
 
     // Data untuk Modal
     const initial = msg.from ? msg.from.charAt(0).toUpperCase() : '?';
-    document.getElementById('modalSubject').innerText = msg.subject || '(No Subject)';
+    document.getElementById('modalSubject').innerText = msg.subject || '(Tanpa Subjek)';
     document.getElementById('modalBody').innerText = msg.message;
     
     document.getElementById('modalMeta').innerHTML = `
@@ -215,6 +251,7 @@ async function openMessage(msgId) {
     
     const modal = document.getElementById('msgModal');
     modal.classList.add('show');
+    document.body.classList.add('modal-open');
 
     if (!msg.isRead) {
         msg.isRead = true;
@@ -225,7 +262,9 @@ async function openMessage(msgId) {
 
 // Tutup modal
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('show');
+    const modal = document.getElementById(modalId);
+    modal.classList.remove('show');
+    document.body.classList.remove('modal-open');
 }
 
 // Update badge notifikasi
@@ -259,7 +298,13 @@ function emptyState(type) {
 function copyEmail() {
     if (!currentEmail) return;
     navigator.clipboard.writeText(currentEmail);
+    showToast('Email disalin ke clipboard!');
+}
+
+// Show toast notification
+function showToast(message) {
     const toast = document.getElementById('toast');
+    toast.innerText = message;
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 2000);
 }
@@ -269,7 +314,11 @@ function startAutoRefresh() {
     let timeLeft = 10;
     const timerText = document.getElementById('timerText');
     
-    setInterval(() => {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    
+    autoRefreshInterval = setInterval(() => {
         timeLeft--;
         timerText.innerText = `Auto-refresh: ${timeLeft}s`;
         if (timeLeft <= 0) {
@@ -279,7 +328,7 @@ function startAutoRefresh() {
     }, 1000);
 }
 
-// ========== FUNGSI BARU UNTUK FITUR SHARE DAN CLEAR ==========
+// ========== FUNGSI UNTUK FITUR SHARE DAN CLEAR ==========
 
 // Hapus semua pesan di inbox (yang sudah dibaca)
 async function clearInbox() {
@@ -294,18 +343,13 @@ async function clearInbox() {
         }
         
         await loadCachedMessages();
-        
-        // Tampilkan notifikasi
-        const toast = document.getElementById('toast');
-        toast.innerText = 'Inbox telah dibersihkan';
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2000);
+        showToast('Inbox telah dibersihkan');
     }
 }
 
 // Buka modal share
 function openShareModal() {
-    // Update data capture sebelum membuka modal
+    // Update data capture
     const capEmail = document.getElementById('capEmail');
     const capSubject = document.getElementById('capSubject');
     const capMsg = document.getElementById('capMsg');
@@ -318,14 +362,25 @@ function openShareModal() {
     if (subjectElement) capSubject.innerText = subjectElement.innerText;
     if (bodyElement) capMsg.innerText = bodyElement.innerText;
     
-    document.getElementById('shareMsgModal').classList.add('show');
+    // Tutup modal pesan dulu
+    closeModal('msgModal');
+    
+    // Buka modal share setelah animasi tutup
+    setTimeout(() => {
+        const modal = document.getElementById('shareMsgModal');
+        modal.classList.add('show');
+        document.body.classList.add('modal-open');
+    }, 300);
 }
 
-// Share sebagai gambar menggunakan html2canvas
+// Share sebagai gambar
 async function shareAsImage() {
     const captureCard = document.getElementById('capture-card');
     
+    showToast('Membuat gambar...');
+    
     try {
+        // Clone card untuk menghindari gangguan
         const canvas = await html2canvas(captureCard, {
             scale: 2,
             backgroundColor: '#ffffff',
@@ -334,49 +389,47 @@ async function shareAsImage() {
             useCORS: true
         });
         
-        // Konversi ke image
         const image = canvas.toDataURL('image/png');
         
-        // Cek apakah support Web Share API
-        if (navigator.share) {
-            // Konversi dataURL ke blob
-            const blob = await (await fetch(image)).blob();
-            const file = new File([blob], 'pesan-tempmail.png', { type: 'image/png' });
-            
-            navigator.share({
-                title: 'Pesan TempMail',
-                text: 'Lihat pesan ini',
-                files: [file]
-            }).catch(err => {
-                console.log('Share cancelled:', err);
-                // Fallback download
+        // Cek support Web Share API
+        if (navigator.share && navigator.canShare) {
+            try {
+                const blob = await (await fetch(image)).blob();
+                const file = new File([blob], `tempmail-${Date.now()}.png`, { type: 'image/png' });
+                
+                if (navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: 'Pesan TempMail',
+                        files: [file]
+                    });
+                    showToast('Berhasil dibagikan!');
+                } else {
+                    downloadImage(image);
+                }
+            } catch (shareErr) {
                 downloadImage(image);
-            });
+            }
         } else {
-            // Fallback download
             downloadImage(image);
         }
     } catch (error) {
-        alert('Gagal generate gambar: ' + error.message);
+        console.error('HTML2Canvas error:', error);
+        showToast('Gagal membuat gambar');
     }
     
     closeModal('shareMsgModal');
 }
 
-// Fungsi helper untuk download image
+// Download image
 function downloadImage(imageData) {
     const link = document.createElement('a');
     link.download = `tempmail-${Date.now()}.png`;
     link.href = imageData;
     link.click();
-    
-    const toast = document.getElementById('toast');
-    toast.innerText = 'Gambar tersimpan';
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2000);
+    showToast('Gambar tersimpan');
 }
 
-// Share ke WhatsApp sebagai teks
+// Share ke WhatsApp
 function shareToWaText() {
     const modalSubject = document.getElementById('modalSubject').innerText;
     const modalBody = document.getElementById('modalBody').innerText;
@@ -391,29 +444,26 @@ function shareToWaText() {
     closeModal('shareMsgModal');
 }
 
-// Override fungsi openMessage asli untuk memastikan tombol share ada
-const originalOpenMessage = openMessage;
-openMessage = async function(msgId) {
-    await originalOpenMessage(msgId);
+// Copy teks pesan
+function copyMessageText() {
+    const modalSubject = document.getElementById('modalSubject').innerText;
+    const modalBody = document.getElementById('modalBody').innerText;
+    const modalFrom = document.querySelector('.meta-from')?.innerText || 'Unknown';
+    const modalTime = document.querySelector('.meta-time')?.innerText || '';
     
-    // Pastikan tombol share selalu ada di modal header
-    const modalHeader = document.querySelector('.modal-header');
-    if (modalHeader) {
-        const headerRight = modalHeader.querySelector('div') || modalHeader;
-        if (!headerRight.querySelector('#shareBtnInModal')) {
-            const shareBtn = document.createElement('button');
-            shareBtn.id = 'shareBtnInModal';
-            shareBtn.className = 'close-btn';
-            shareBtn.innerHTML = '<i class="bi bi-share"></i>';
-            shareBtn.onclick = openShareModal;
-            shareBtn.title = 'Bagikan';
-            
-            const closeBtn = headerRight.querySelector('.close-btn:last-child');
-            if (closeBtn) {
-                headerRight.insertBefore(shareBtn, closeBtn);
-            } else {
-                headerRight.appendChild(shareBtn);
-            }
-        }
+    const text = `*${modalSubject}*\nDari: ${modalFrom}\nWaktu: ${modalTime}\n\n${modalBody}`;
+    
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Teks disalin!');
+        closeModal('shareMsgModal');
+    }).catch(() => {
+        showToast('Gagal menyalin teks');
+    });
+}
+
+// Cleanup interval saat page unload
+window.addEventListener('beforeunload', function() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
     }
-};
+});
